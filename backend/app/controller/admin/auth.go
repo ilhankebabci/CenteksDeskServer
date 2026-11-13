@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"os"
 	"rustdesk-api-server-pro/app/form/admin"
 	"rustdesk-api-server-pro/app/model"
 	"rustdesk-api-server-pro/config"
