@@ -8,7 +8,7 @@ FROM node:20-alpine AS node
 WORKDIR /frontend
 COPY ./soybean-admin .
 RUN rm -rf node_modules
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9
 RUN pnpm i && pnpm build
 
 FROM alpine:3.20.3

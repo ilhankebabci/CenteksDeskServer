@@ -15,7 +15,8 @@ if [ ! -d "$REPO_DIR" ]; then
 else
     echo ">>> Güncel kodlar çekiliyor..."
     cd "$REPO_DIR"
-    sudo git pull origin master
+    sudo git fetch origin master
+    sudo git reset --hard origin/master
 fi
 
 cd "$REPO_DIR"
@@ -57,3 +58,4 @@ echo " 🌐 Web Adresi: http://panel.centeks.com:8080"
 echo " 👤 Kullanıcı Adı: admin"
 echo " 🔑 Parola: Centeks2027!"
 echo "=========================================================="
+
