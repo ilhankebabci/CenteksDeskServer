@@ -45,13 +45,13 @@ export const themeSettings: App.Theme.ThemeSetting = {
   },
   footer: {
     visible: true,
-    fixed: false,
+    fixed: true,
     height: 48,
     right: true
   },
   watermark: {
     visible: false,
-    text: 'SoybeanAdmin'
+    text: 'CENTEKS Group'
   },
   tokens: {
     light: {

@@ -5,6 +5,7 @@ import "time"
 type Device struct {
 	Id         int       `xorm:"'id' int notnull pk autoincr"`
 	Alias      string    `xorm:"'alias' varchar(255)"`
+	Company    string    `xorm:"'company' varchar(255)"`
 	Department string    `xorm:"'department' varchar(255)"`
 	Cpu        string    `xorm:"'cpu' varchar(255)"`
 	Hostname   string    `xorm:"'hostname' varchar(255)"`

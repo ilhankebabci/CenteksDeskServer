@@ -18,6 +18,8 @@ func (c *DevicesController) BeforeActivation(b mvc.BeforeActivation) {
 	b.Handle("GET", "/devices/list", "HandleList")
 	b.Handle("POST", "/devices/update", "HandleUpdate")
 	b.Handle("POST", "/devices/delete", "HandleDelete")
+	b.Handle("GET", "/companies/list", "HandleCompanyList")
+	b.Handle("POST", "/companies/add", "HandleCompanyAdd")
 }
 
 func (c *DevicesController) HandleList() mvc.Result {
@@ -27,6 +29,7 @@ func (c *DevicesController) HandleList() mvc.Result {
 	username := c.Ctx.URLParamDefault("username", "")
 	rustdesk_id := c.Ctx.URLParamDefault("rustdesk_id", "")
 	department := c.Ctx.URLParamDefault("department", "")
+	company := c.Ctx.URLParamDefault("company", "")
 
 	query := func() *xorm.Session {
 		q := c.Db.Table(&model.Device{})
@@ -42,6 +45,9 @@ func (c *DevicesController) HandleList() mvc.Result {
 		}
 		if department != "" && department != "Tümü" {
 			q.Where("department = ?", department)
+		}
+		if company != "" && company != "Tümü" {
+			q.Where("company = ?", company)
 		}
 		q.Desc("is_online").Desc("updated_at")
 		return q
@@ -61,9 +67,14 @@ func (c *DevicesController) HandleList() mvc.Result {
 		if dept == "" {
 			dept = "Genel"
 		}
+		comp := a.Company
+		if comp == "" {
+			comp = "Centeks Group"
+		}
 		list = append(list, iris.Map{
 			"id":          a.Id,
 			"alias":       a.Alias,
+			"company":     comp,
 			"department":  dept,
 			"rustdesk_id": a.RustdeskId,
 			"hostname":    a.Hostname,
@@ -88,6 +99,7 @@ func (c *DevicesController) HandleList() mvc.Result {
 type DeviceUpdateForm struct {
 	Id         int    `json:"id"`
 	Alias      string `json:"alias"`
+	Company    string `json:"company"`
 	Department string `json:"department"`
 }
 
@@ -100,8 +112,17 @@ func (c *DevicesController) HandleUpdate() mvc.Result {
 		return c.Error(nil, "Geçersiz cihaz ID")
 	}
 
-	_, err := c.Db.Where("id = ?", form.Id).Cols("alias", "department").Update(&model.Device{
+	if form.Company != "" && form.Company != "Tümü" {
+		var existing model.Company
+		has, _ := c.Db.Where("name = ?", form.Company).Get(&existing)
+		if !has {
+			c.Db.Insert(&model.Company{Name: form.Company})
+		}
+	}
+
+	_, err := c.Db.Where("id = ?", form.Id).Cols("alias", "company", "department").Update(&model.Device{
 		Alias:      form.Alias,
+		Company:    form.Company,
 		Department: form.Department,
 	})
 	if err != nil {
@@ -128,4 +149,52 @@ func (c *DevicesController) HandleDelete() mvc.Result {
 		return c.Error(nil, err.Error())
 	}
 	return c.Success(nil, "Cihaz silindi")
+}
+
+func (c *DevicesController) HandleCompanyList() mvc.Result {
+	var companies []model.Company
+	c.Db.Find(&companies)
+
+	names := []string{"Centeks Group"}
+	seen := map[string]bool{"Centeks Group": true}
+
+	for _, comp := range companies {
+		if !seen[comp.Name] && comp.Name != "" {
+			names = append(names, comp.Name)
+			seen[comp.Name] = true
+		}
+	}
+
+	var devCompanies []string
+	c.Db.Table("device").Distinct("company").Where("company != ''").Find(&devCompanies)
+	for _, dc := range devCompanies {
+		if !seen[dc] && dc != "" {
+			names = append(names, dc)
+			seen[dc] = true
+		}
+	}
+
+	return c.Success(names, "ok")
+}
+
+type CompanyAddForm struct {
+	Name string `json:"name"`
+	Note string `json:"note"`
+}
+
+func (c *DevicesController) HandleCompanyAdd() mvc.Result {
+	var form CompanyAddForm
+	if err := c.Ctx.ReadJSON(&form); err != nil || form.Name == "" {
+		return c.Error(nil, "Firma adı boş olamaz")
+	}
+
+	var existing model.Company
+	has, _ := c.Db.Where("name = ?", form.Name).Get(&existing)
+	if !has {
+		c.Db.Insert(&model.Company{
+			Name: form.Name,
+			Note: form.Note,
+		})
+	}
+	return c.Success(nil, "Firma başarıyla kaydedildi")
 }

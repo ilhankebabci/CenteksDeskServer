@@ -119,6 +119,7 @@ declare namespace Api {
   namespace Devices {
     type Device = Common.CommonRecord<{
       alias: string;
+      company: string;
       department: string;
       rustdesk_id: string;
       hostname: string;

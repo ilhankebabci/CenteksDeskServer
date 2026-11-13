@@ -1,21 +1,33 @@
 <script setup lang="tsx">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { NButton, NPopconfirm, NSpace, NTag } from 'naive-ui';
-import { deleteDevice, fetchDevicesList } from '@/service/api/devices';
+import { deleteDevice, fetchCompanyList, fetchDevicesList } from '@/service/api/devices';
 import { $t } from '@/locales';
 import { useAppStore } from '@/store/modules/app';
 import { useTable } from '@/hooks/common/table';
 import TableHeader from './components/table-header.vue';
 import AuditBaseLogsSearch from './components/search.vue';
 import DeviceEditModal from './components/device-edit-modal.vue';
+import CompanyModal from './components/company-modal.vue';
 
 const appStore = useAppStore();
 
 const editModalVisible = ref(false);
+const companyModalVisible = ref(false);
 const currentEditingDevice = ref<any>(null);
+
 const selectedDepartment = ref('Tümü');
+const selectedCompany = ref('Tümü');
 
 const departmentList = ['Tümü', 'Bilgi İşlem', 'Fabrika', 'Ofis / Muhasebe', 'Sunucular'];
+const companyList = ref<string[]>(['Centeks Group']);
+
+async function loadCompanies() {
+  const res = await fetchCompanyList();
+  if (res.data && res.data.length > 0) {
+    companyList.value = res.data;
+  }
+}
 
 function handleOpenEdit(row: any) {
   currentEditingDevice.value = row;
@@ -41,6 +53,17 @@ function handleDepartmentChange(dept: string) {
   getDataByPage();
 }
 
+function handleCompanyChange(comp: string) {
+  selectedCompany.value = comp;
+  searchParams.company = comp === 'Tümü' ? null : comp;
+  getDataByPage();
+}
+
+function onCompanyAdded() {
+  loadCompanies();
+  getData();
+}
+
 const {
   columns,
   columnChecks,
@@ -60,7 +83,8 @@ const {
     hostname: null,
     username: null,
     rustdesk_id: null,
-    department: null
+    department: null,
+    company: null
   },
   columns: () => [
     {
@@ -93,6 +117,20 @@ const {
               </span>
             )}
           </div>
+        );
+      }
+    },
+    {
+      key: 'company',
+      title: 'Firma / Şirket',
+      align: 'center',
+      width: 160,
+      render: (row: any) => {
+        const comp = row.company || 'Centeks Group';
+        return (
+          <NTag type="info" size="small" round>
+            🏢 {comp}
+          </NTag>
         );
       }
     },
@@ -180,15 +218,49 @@ const {
     }
   ]
 });
+
+onMounted(() => {
+  loadCompanies();
+});
 </script>
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <!-- Departman Hızlı Filtre Barı -->
+    <!-- Firma ve Departman Hızlı Filtre Barı -->
     <NCard :bordered="false" size="small" class="card-wrapper">
-      <div class="flex items-center justify-between flex-wrap gap-3">
-        <div class="flex items-center gap-2">
-          <span class="text-xs font-semibold text-slate-500">Departman Filtresi:</span>
+      <div class="space-y-3">
+        <!-- 1. Firma / Şirket Filtresi -->
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+              🏢 Şirket Filtresi:
+            </span>
+            <NRadioGroup
+              :value="selectedCompany"
+              size="small"
+              @update:value="handleCompanyChange"
+            >
+              <NRadioButton value="Tümü">Tüm Şirketler</NRadioButton>
+              <NRadioButton v-for="comp in companyList" :key="comp" :value="comp">
+                {{ comp }}
+              </NRadioButton>
+            </NRadioGroup>
+          </div>
+          <NButton
+            size="small"
+            type="info"
+            dashed
+            @click="companyModalVisible = true"
+          >
+            + Yeni Firma / Şirket Ekle
+          </NButton>
+        </div>
+
+        <!-- 2. Departman Filtresi -->
+        <div class="flex items-center gap-2 flex-wrap pt-2 border-t border-slate-100 dark:border-slate-800">
+          <span class="text-xs font-semibold text-slate-500 flex items-center gap-1">
+            📁 Departman:
+          </span>
           <NRadioGroup
             :value="selectedDepartment"
             size="small"
@@ -198,9 +270,6 @@ const {
               {{ dept }}
             </NRadioButton>
           </NRadioGroup>
-        </div>
-        <div class="text-xs text-slate-400">
-          Cihazları isimlendirmek ve departmanını değiştirmek için <span class="font-bold text-slate-600">✏️ Düzenle</span> butonunu kullanabilirsiniz.
         </div>
       </div>
     </NCard>
@@ -226,7 +295,7 @@ const {
         :data="data"
         size="small"
         :flex-height="!appStore.isMobile"
-        :scroll-x="1200"
+        :scroll-x="1350"
         :loading="loading"
         remote
         :row-key="row => row.id"
@@ -235,10 +304,18 @@ const {
       />
     </NCard>
 
+    <!-- Cihaz Düzenleme Modalı -->
     <DeviceEditModal
       v-model:visible="editModalVisible"
       :device-data="currentEditingDevice"
+      :company-list="companyList"
       @submitted="getData"
+    />
+
+    <!-- Yeni Firma Ekleme Modalı -->
+    <CompanyModal
+      v-model:visible="companyModalVisible"
+      @submitted="onCompanyAdded"
     />
   </div>
 </template>
