@@ -12,3 +12,4 @@ type Company struct {
 func (m *Company) TableName() string {
 	return "company"
 }
+

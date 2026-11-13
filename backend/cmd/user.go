@@ -24,6 +24,30 @@ var userAddCmd = &cobra.Command{
 		username := args[0]
 		password, _ := util.Password(args[1])
 
+		cfg := config.GetServerConfig()
+		engine, err := db.NewEngine(cfg.Db)
+		if err != nil {
+			fmt.Println("Db Engine create error:", err)
+			return
+		}
+
+		// Kullanıcı zaten var mı kontrol et
+		var existing model.User
+		has, err := engine.Where("username = ?", username).Asc("id").Get(&existing)
+		if err == nil && has {
+			// Kullanıcı zaten var, parolasını ve yetkisini güncelle
+			existing.Password = password
+			existing.IsAdmin = isAdmin
+			existing.Status = 1
+			engine.Where("id = ?", existing.Id).Cols("password", "is_admin", "status").Update(&existing)
+
+			// Varsa aynı isimli mükerrer fazlalık kayıtları otomatik temizle
+			engine.Where("username = ? AND id != ?", username, existing.Id).Delete(&model.User{})
+
+			fmt.Println("User already exists, updated successfully and cleaned duplicates")
+			return
+		}
+
 		user := &model.User{
 			Username:        username,
 			Password:        password,
@@ -33,12 +57,7 @@ var userAddCmd = &cobra.Command{
 			IsAdmin:         isAdmin,
 			Status:          1,
 		}
-		cfg := config.GetServerConfig()
-		engine, err := db.NewEngine(cfg.Db)
-		if err != nil {
-			fmt.Println("Db Engine create error:", err)
-			return
-		}
+
 		_, err = engine.Insert(user)
 		if err != nil {
 			fmt.Println("Add error:", err)
