@@ -76,3 +76,4 @@ echo "=========================================================="
 echo " ✅ Tamamlandı! Artık doğrudan şu adresten erişebilirsin:"
 echo " 🌐 https://panel.centeks.com (Port yazmaya gerek kalmadı!)"
 echo "=========================================================="
+

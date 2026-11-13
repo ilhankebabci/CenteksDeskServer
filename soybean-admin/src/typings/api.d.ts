@@ -118,6 +118,8 @@ declare namespace Api {
 
   namespace Devices {
     type Device = Common.CommonRecord<{
+      alias: string;
+      department: string;
       rustdesk_id: string;
       hostname: string;
       username: string;
@@ -125,7 +127,9 @@ declare namespace Api {
       version: string;
       os: string;
       memory: string;
+      is_online: boolean;
       created_at: string;
+      updated_at: string;
     }>;
     type DevicesList = Common.PaginatingQueryRecord<Device>;
     type DeviceSearchParams = CommonType.RecordNullable<
