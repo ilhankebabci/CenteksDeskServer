@@ -26,10 +26,6 @@ func (c *AuthController) PostAuthLogin() mvc.Result {
 		return c.Error(nil, err.Error())
 	}
 
-	if os.Getenv("E2E_SKIP_CAPTCHA") != "true" && !captcha.VerifyCode(loginForm.CaptchaId, loginForm.Code) {
-		return c.Error(nil, "CaptchaError")
-	}
-
 	var user model.User
 	get, err := c.Db.Where("username = ? and is_admin = 1", loginForm.Username).Get(&user)
 	if err != nil {
