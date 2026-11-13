@@ -21,6 +21,13 @@ fi
 
 cd "$REPO_DIR"
 
+# 1.5 İstemci (.exe) dosyasını downloads dizinine hazırla
+sudo mkdir -p /var/www/centeks-panel/downloads
+if [ ! -f /var/www/centeks-panel/downloads/CenteksDestek-x86_64.exe ]; then
+    echo ">>> Güncel Windows istemcisi (.exe) indiriliyor..."
+    sudo curl -L https://github.com/ilhankebabci/rustdesk/releases/download/v1.5.3/CenteksDestek-x86_64.exe -o /var/www/centeks-panel/downloads/CenteksDestek-x86_64.exe || true
+fi
+
 # 2. Docker imajını derle
 echo ">>> Docker imajı derleniyor (centeks-server:latest)..."
 sudo docker build -t centeks-server:latest .
@@ -54,8 +61,7 @@ sudo docker exec rustdesk-api-server-pro rustdesk-api-server-pro user add admin 
 
 echo "=========================================================="
 echo " ✅ CENTEKS Destek Paneli Başarıyla Güncellendi!"
-echo " 🌐 Web Adresi: http://panel.centeks.com:8080"
+echo " 🌐 Web Adresi: https://panel.centeks.com"
 echo " 👤 Kullanıcı Adı: admin"
 echo " 🔑 Parola: Centeks2027!"
 echo "=========================================================="
-
