@@ -1,7 +1,7 @@
 FROM golang:alpine AS golang
 WORKDIR /backend
 COPY ./backend .
-RUN go build
+RUN go build -o rustdesk-api-server-pro
 
 
 FROM node:20-alpine AS node
