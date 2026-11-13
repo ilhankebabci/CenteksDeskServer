@@ -4,8 +4,8 @@ import { localStg } from '@/utils/storage';
 import messages from './locale';
 
 const i18n = createI18n({
-  locale: localStg.get('lang') || 'zh-CN',
-  fallbackLocale: 'en',
+  locale: localStg.get('lang') || 'tr-TR',
+  fallbackLocale: 'tr-TR',
   messages,
   legacy: false
 });

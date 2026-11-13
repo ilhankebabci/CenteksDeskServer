@@ -265,7 +265,7 @@ declare namespace App {
   namespace I18n {
     type RouteKey = import('@elegant-router/types').RouteKey;
 
-    type LangType = 'en-US' | 'zh-CN' | 'ru-RU' | 'it-IT';
+    type LangType = 'en-US' | 'zh-CN' | 'ru-RU' | 'it-IT' | 'tr-TR';
 
     type LangOption = {
       label: string;

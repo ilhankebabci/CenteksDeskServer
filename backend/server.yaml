@@ -1,25 +1,23 @@
-signKey: "sercrethatmaycontainch@r$32chars" # this is the token signing key. change this before start server
-debugMode: true # debug mode
+signKey: "centeks-desk-pro-secret-key-2026-auth" # token imzalama anahtari
+debugMode: false # debug modu
 db:
   driver: "sqlite"
-  dsn: "./server.db"
-  timeZone: "Asia/Shanghai" # setting the time zone fixes the database creation time problem
+  dsn: "/app/data/server.db"
+  timeZone: "Europe/Istanbul" # Turkiye saat dilimi
   showSql: false
 
-  # driver: "mysql"
-  # dsn: "root:123@tcp(localhost:3306)/test?charset=utf8mb4"
 httpConfig:
-  printRequestLog: true
+  printRequestLog: false
   staticdir: "/app/dist"
-  port: ":12345" # api server port
+  port: ":8080" # CENTEKS Pro API portu
 
 smtpConfig:
   host: "127.0.0.1"
-  port: 1025
-  username: "test"
-  password: "test"
-  encryption: "none" # none ssl/tls starttls
-  from: "test@localhost.com"
+  port: 25
+  username: "destek@centeks.com"
+  password: ""
+  encryption: "none"
+  from: "destek@centeks.com"
 
 jobsConfig:
   deviceCheckJob:

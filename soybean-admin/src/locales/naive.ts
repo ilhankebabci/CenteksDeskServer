@@ -2,6 +2,7 @@ import { dateEnUS, dateItIT, dateRuRU, dateZhCN, enUS, itIT, ruRU, zhCN } from '
 import type { NDateLocale, NLocale } from 'naive-ui';
 
 export const naiveLocales: Record<App.I18n.LangType, NLocale> = {
+  'tr-TR': enUS,
   'zh-CN': zhCN,
   'en-US': enUS,
   'ru-RU': ruRU,
@@ -9,6 +10,7 @@ export const naiveLocales: Record<App.I18n.LangType, NLocale> = {
 };
 
 export const naiveDateLocales: Record<App.I18n.LangType, NDateLocale> = {
+  'tr-TR': dateEnUS,
   'zh-CN': dateZhCN,
   'en-US': dateEnUS,
   'ru-RU': dateRuRU,

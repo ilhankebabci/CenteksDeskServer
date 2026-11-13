@@ -13,7 +13,8 @@ interface LogItem {
 }
 
 const logs = computed<LogItem[]>(() => [
-  { id: 1, content: '适配v1.2.7版本客户端', version: 'v1.2.7', time: '2024-08-29' }
+  { id: 1, content: 'CENTEKS Destek v1.5.3 İstemci Entegrasyonu ve Türkçe Panel', version: 'v1.5.3', time: '2026-11-13' },
+  { id: 2, content: 'CENTEKS Yönetim Paneli Güvenlik ve Yetkilendirme Güncellemesi', version: 'v1.5.0', time: '2026-11-12' }
 ]);
 </script>
 
