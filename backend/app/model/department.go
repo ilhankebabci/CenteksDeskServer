@@ -12,3 +12,4 @@ type Department struct {
 func (m *Department) TableName() string {
 	return "department"
 }
+

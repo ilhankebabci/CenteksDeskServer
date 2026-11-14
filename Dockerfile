@@ -19,6 +19,6 @@ COPY ./docker/start.sh .
 COPY --from=golang /backend/rustdesk-api-server-pro .
 COPY --from=golang /backend/server.yaml .
 COPY --from=node /frontend/dist ./dist
-RUN apk add tzdata
+RUN apk add --no-cache tzdata ca-certificates || true
 EXPOSE 8080
 CMD [ "sh", "/app/start.sh"]

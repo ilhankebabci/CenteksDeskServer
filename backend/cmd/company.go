@@ -181,3 +181,4 @@ func init() {
 	companyCmd.AddCommand(companyListCmd)
 	RootCmd.AddCommand(companyCmd)
 }
+

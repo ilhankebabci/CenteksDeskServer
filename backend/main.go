@@ -1,6 +1,8 @@
 package main
 
 import (
+	_ "time/tzdata"
+
 	"rustdesk-api-server-pro/cmd"
 )
 
