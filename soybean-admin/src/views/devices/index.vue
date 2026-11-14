@@ -50,11 +50,44 @@ function handleOpenEdit(row: any) {
   editModalVisible.value = true;
 }
 
+function copyToClipboard(text: string) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text);
+  } else {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+    } catch (e) {}
+    textArea.remove();
+  }
+}
+
+function handleCopyId(id: string) {
+  const cleanId = String(id || '').replace(/\s+/g, '');
+  if (!cleanId) return;
+  copyToClipboard(cleanId);
+  window.$message?.success(`📋 ID Kopyalandı: ${cleanId}`);
+}
+
 function handleConnect(row: any) {
   const cleanId = String(row.rustdesk_id || '').replace(/\s+/g, '');
   if (!cleanId) return;
-  window.open(`rustdesk://${cleanId}?password=Centeks2027!`, '_self');
-  window.$message?.info(`rustdesk://${cleanId} tetiklendi`);
+  
+  copyToClipboard(cleanId);
+  
+  try {
+    const link = document.createElement('a');
+    link.href = `rustdesk://${cleanId}?password=Centeks2027!`;
+    link.click();
+  } catch (e) {}
+  
+  window.$message?.success(`⚡ ID Kopyalandı: ${cleanId} (RustDesk açılıyor...)`);
 }
 
 async function handleDelete(id: number) {
@@ -173,7 +206,16 @@ const {
       align: 'center',
       width: 140,
       render: (row: any) => {
-        return <span class="font-mono font-bold text-amber-600 text-sm">{row.rustdesk_id}</span>;
+        return (
+          <span
+            class="font-mono font-bold text-amber-600 text-sm cursor-pointer hover:bg-amber-50 dark:hover:bg-amber-950/40 px-2 py-0.5 rounded transition-all select-all inline-flex items-center gap-1"
+            title="Kopyalamak için tıklayın"
+            onClick={() => handleCopyId(row.rustdesk_id)}
+          >
+            {row.rustdesk_id}
+            <span class="text-xs opacity-60">📋</span>
+          </span>
+        );
       }
     },
     {
