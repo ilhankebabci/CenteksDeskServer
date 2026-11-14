@@ -30,7 +30,7 @@ fi
 
 # 2. Docker imajını derle
 echo ">>> Docker imajı derleniyor (centeks-server:latest)..."
-sudo docker build -t centeks-server:latest .
+sudo docker build --network=host -t centeks-server:latest .
 
 # 3. Eski konteyneri durdur
 if [ "$(sudo docker ps -aq -f name=rustdesk-api-server-pro)" ]; then
