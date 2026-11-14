@@ -1,33 +1,49 @@
 <script setup lang="tsx">
-import { onMounted, ref } from 'vue';
-import { NButton, NPopconfirm, NSpace, NTag } from 'naive-ui';
-import { deleteDevice, fetchCompanyList, fetchDevicesList } from '@/service/api/devices';
+import { computed, onMounted, ref } from 'vue';
+import { NButton, NCard, NDataTable, NPopconfirm, NRadioButton, NRadioGroup, NSpace, NTag } from 'naive-ui';
+import { deleteDevice, fetchCompanyTree, fetchDevicesList } from '@/service/api/devices';
 import { $t } from '@/locales';
 import { useAppStore } from '@/store/modules/app';
 import { useTable } from '@/hooks/common/table';
 import TableHeader from './components/table-header.vue';
 import AuditBaseLogsSearch from './components/search.vue';
 import DeviceEditModal from './components/device-edit-modal.vue';
-import CompanyModal from './components/company-modal.vue';
+import OrgManageModal from './components/org-manage-modal.vue';
 
 const appStore = useAppStore();
 
 const editModalVisible = ref(false);
-const companyModalVisible = ref(false);
+const orgModalVisible = ref(false);
 const currentEditingDevice = ref<any>(null);
 
-const selectedDepartment = ref('Tümü');
 const selectedCompany = ref('Tümü');
+const selectedDepartment = ref('Tümü');
+const companyTree = ref<Api.Devices.CompanyTreeItem[]>([]);
 
-const departmentList = ['Tümü', 'Bilgi İşlem', 'Fabrika', 'Ofis / Muhasebe', 'Sunucular'];
-const companyList = ref<string[]>(['Centeks Group']);
-
-async function loadCompanies() {
-  const res = await fetchCompanyList();
-  if (res.data && res.data.length > 0) {
-    companyList.value = res.data;
+async function loadOrgTree() {
+  const res = await fetchCompanyTree();
+  if (res.data) {
+    companyTree.value = res.data;
   }
 }
+
+const activeDepartments = computed(() => {
+  if (selectedCompany.value === 'Tümü') {
+    const allDepts = new Set<string>();
+    companyTree.value.forEach(comp => {
+      comp.departments.forEach(d => allDepts.add(d));
+    });
+    const defaultDepts = ['Bilgi İşlem', 'Muhasebe', 'Kalite', 'Fabrika', 'Sunucular'];
+    defaultDepts.forEach(d => allDepts.add(d));
+    return ['Tümü', ...Array.from(allDepts)];
+  }
+
+  const currentComp = companyTree.value.find(c => c.name === selectedCompany.value);
+  if (!currentComp || currentComp.departments.length === 0) {
+    return ['Tümü', 'Bilgi İşlem', 'Muhasebe', 'Kalite', 'Fabrika'];
+  }
+  return ['Tümü', ...currentComp.departments];
+});
 
 function handleOpenEdit(row: any) {
   currentEditingDevice.value = row;
@@ -44,7 +60,16 @@ function handleConnect(row: any) {
 async function handleDelete(id: number) {
   await deleteDevice(id);
   window.$message?.success('Cihaz başarıyla silindi');
+  loadOrgTree();
   getData();
+}
+
+function handleCompanyChange(comp: string) {
+  selectedCompany.value = comp;
+  selectedDepartment.value = 'Tümü';
+  searchParams.company = comp === 'Tümü' ? null : comp;
+  searchParams.department = null;
+  getDataByPage();
 }
 
 function handleDepartmentChange(dept: string) {
@@ -53,14 +78,8 @@ function handleDepartmentChange(dept: string) {
   getDataByPage();
 }
 
-function handleCompanyChange(comp: string) {
-  selectedCompany.value = comp;
-  searchParams.company = comp === 'Tümü' ? null : comp;
-  getDataByPage();
-}
-
-function onCompanyAdded() {
-  loadCompanies();
+function onOrgSubmitted() {
+  loadOrgTree();
   getData();
 }
 
@@ -108,7 +127,7 @@ const {
       render: (row: any) => {
         return (
           <div class="flex flex-col py-1">
-            <span class="font-bold text-slate-800 text-sm">
+            <span class="font-bold text-slate-800 dark:text-slate-100 text-sm">
               {row.alias || row.hostname || 'İsimsiz Cihaz'}
             </span>
             {row.alias && (
@@ -141,13 +160,11 @@ const {
       width: 150,
       render: (row: any) => {
         const dept = row.department || 'Genel';
-        const typeMap: Record<string, 'info' | 'warning' | 'success' | 'error' | 'default'> = {
-          'Bilgi İşlem': 'info',
-          'Fabrika': 'warning',
-          'Ofis / Muhasebe': 'success',
-          'Sunucular': 'error'
-        };
-        return <NTag type={typeMap[dept] || 'default'} size="small">{dept}</NTag>;
+        return (
+          <NTag type="warning" size="small" round>
+            📁 {dept}
+          </NTag>
+        );
       }
     },
     {
@@ -220,14 +237,14 @@ const {
 });
 
 onMounted(() => {
-  loadCompanies();
+  loadOrgTree();
 });
 </script>
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
     <!-- Firma ve Departman Hızlı Filtre Barı -->
-    <NCard :bordered="false" size="small" class="card-wrapper">
+    <NCard :bordered="false" size="small" class="card-wrapper shadow-sm">
       <div class="space-y-3">
         <!-- 1. Firma / Şirket Filtresi -->
         <div class="flex items-center justify-between flex-wrap gap-2">
@@ -241,33 +258,36 @@ onMounted(() => {
               @update:value="handleCompanyChange"
             >
               <NRadioButton value="Tümü">Tüm Şirketler</NRadioButton>
-              <NRadioButton v-for="comp in companyList" :key="comp" :value="comp">
-                {{ comp }}
+              <NRadioButton v-for="comp in companyTree" :key="comp.name" :value="comp.name">
+                🏢 {{ comp.name }}
+                <span v-if="comp.device_count > 0" class="ml-1 text-[11px] opacity-75">
+                  ({{ comp.device_count }})
+                </span>
               </NRadioButton>
             </NRadioGroup>
           </div>
           <NButton
             size="small"
-            type="info"
+            type="primary"
             dashed
-            @click="companyModalVisible = true"
+            @click="orgModalVisible = true"
           >
-            + Yeni Firma / Şirket Ekle
+            🏢 Şirket & Birim Yönetimi
           </NButton>
         </div>
 
-        <!-- 2. Departman Filtresi -->
+        <!-- 2. Departman Filtresi (Seçili Firmaya Göre Değişir) -->
         <div class="flex items-center gap-2 flex-wrap pt-2 border-t border-slate-100 dark:border-slate-800">
           <span class="text-xs font-semibold text-slate-500 flex items-center gap-1">
-            📁 Departman:
+            📁 {{ selectedCompany === 'Tümü' ? 'Tüm Departmanlar' : `${selectedCompany} Departmanları` }}:
           </span>
           <NRadioGroup
             :value="selectedDepartment"
             size="small"
             @update:value="handleDepartmentChange"
           >
-            <NRadioButton v-for="dept in departmentList" :key="dept" :value="dept">
-              {{ dept }}
+            <NRadioButton v-for="dept in activeDepartments" :key="dept" :value="dept">
+              📁 {{ dept }}
             </NRadioButton>
           </NRadioGroup>
         </div>
@@ -276,7 +296,7 @@ onMounted(() => {
 
     <AuditBaseLogsSearch v-model:model="searchParams" @reset="resetSearchParams" @search="getDataByPage" />
 
-    <NCard :title="$t('route.devices')" :bordered="false" size="small" class="sm:flex-1-hidden card-wrapper">
+    <NCard :title="$t('route.devices')" :bordered="false" size="small" class="sm:flex-1-hidden card-wrapper shadow-sm">
       <template #header-extra>
         <div class="flex items-center gap-3">
           <a
@@ -287,7 +307,7 @@ onMounted(() => {
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             <span>+ Yeni İstemci İndir</span>
           </a>
-          <TableHeader v-model:columns="columnChecks" :loading="loading" @refresh="getData" />
+          <TableHeader v-model:columns="columnChecks" :loading="loading" @refresh="() => { loadOrgTree(); getData(); }" />
         </div>
       </template>
       <NDataTable
@@ -308,14 +328,15 @@ onMounted(() => {
     <DeviceEditModal
       v-model:visible="editModalVisible"
       :device-data="currentEditingDevice"
-      :company-list="companyList"
-      @submitted="getData"
+      :tree-data="companyTree"
+      @submitted="() => { loadOrgTree(); getData(); }"
     />
 
-    <!-- Yeni Firma Ekleme Modalı -->
-    <CompanyModal
-      v-model:visible="companyModalVisible"
-      @submitted="onCompanyAdded"
+    <!-- Şirket & Alt Departman Yönetim Modalı -->
+    <OrgManageModal
+      v-model:visible="orgModalVisible"
+      :tree-data="companyTree"
+      @submitted="onOrgSubmitted"
     />
   </div>
 </template>

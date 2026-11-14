@@ -132,6 +132,12 @@ declare namespace Api {
       created_at: string;
       updated_at: string;
     }>;
+    type CompanyTreeItem = {
+      name: string;
+      note?: string;
+      departments: string[];
+      device_count: number;
+    };
     type DevicesList = Common.PaginatingQueryRecord<Device>;
     type DeviceSearchParams = CommonType.RecordNullable<
       Pick<Api.Devices.Device, 'username' | 'hostname' | 'rustdesk_id'> & Api.Common.CommonSearchParams

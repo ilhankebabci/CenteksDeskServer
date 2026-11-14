@@ -24,9 +24,37 @@ export function fetchCompanyList() {
   return request<string[]>({ url: '/companies/list' });
 }
 
+export function fetchCompanyTree() {
+  return request<Api.Devices.CompanyTreeItem[]>({ url: '/companies/tree' });
+}
+
 export function addCompany(data: { name: string; note?: string }) {
   return request({
     url: '/companies/add',
+    method: 'post',
+    data
+  });
+}
+
+export function deleteCompany(name: string) {
+  return request({
+    url: '/companies/delete',
+    method: 'post',
+    data: { name }
+  });
+}
+
+export function addDepartment(data: { company_name: string; name: string }) {
+  return request({
+    url: '/departments/add',
+    method: 'post',
+    data
+  });
+}
+
+export function deleteDepartment(data: { company_name: string; name: string }) {
+  return request({
+    url: '/departments/delete',
     method: 'post',
     data
   });

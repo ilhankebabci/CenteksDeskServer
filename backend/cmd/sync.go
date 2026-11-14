@@ -28,6 +28,7 @@ var dbSyncCmd = &cobra.Command{
 			new(model.FileTransfer),
 			new(model.Device),
 			new(model.Company),
+			new(model.Department),
 			new(model.AddressBook),
 			new(model.AddressBookTag),
 			new(model.MailLogs),
@@ -40,6 +41,7 @@ var dbSyncCmd = &cobra.Command{
 			fmt.Println("Db init error:", err)
 			return
 		}
+		SeedDefaultCompanies(engine)
 		fmt.Println("Database tables sync success")
 	},
 }

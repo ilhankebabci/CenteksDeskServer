@@ -55,9 +55,11 @@ sudo docker run -d \
 
 sleep 5
 
-# 5. Yönetici hesabını doğrula
-echo ">>> Yönetici hesabı doğrulanıyor..."
+# 5. Yönetici hesabını ve varsayılan kurumsal şirketleri doğrula
+echo ">>> Yönetici hesabı ve kurumsal yapılar doğrulanıyor..."
 sudo docker exec rustdesk-api-server-pro rustdesk-api-server-pro user add admin Centeks2027! --admin > /dev/null 2>&1 || true
+sudo docker exec rustdesk-api-server-pro rustdesk-api-server-pro company add "Centeks Group" -d "Bilgi İşlem,Muhasebe,Kalite,Fabrika,Sunucular" > /dev/null 2>&1 || true
+sudo docker exec rustdesk-api-server-pro rustdesk-api-server-pro company add "Akeray" -d "Muhasebe,Üretim,Sevkiyat,Bilgi İşlem" > /dev/null 2>&1 || true
 
 echo "=========================================================="
 echo " ✅ CENTEKS Destek Paneli Başarıyla Güncellendi!"

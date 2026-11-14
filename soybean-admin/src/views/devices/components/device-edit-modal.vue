@@ -5,11 +5,11 @@ import { updateDevice } from '@/service/api/devices';
 interface Props {
   visible: boolean;
   deviceData?: any;
-  companyList?: string[];
+  treeData?: Api.Devices.CompanyTreeItem[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  companyList: () => ['Centeks Group']
+  treeData: () => []
 });
 
 const emit = defineEmits(['update:visible', 'submitted']);
@@ -22,20 +22,18 @@ const formModel = reactive({
 });
 
 const companyOptions = computed(() => {
-  const list = Array.from(new Set(['Centeks Group', ...(props.companyList || [])]));
-  return list.map(c => ({ label: c, value: c }));
+  const names = (props.treeData || []).map(c => c.name);
+  const list = Array.from(new Set(['Centeks Group', ...names]));
+  return list.map(c => ({ label: `🏢 ${c}`, value: c }));
 });
 
-const departmentOptions = [
-  { label: 'Bilgi İşlem', value: 'Bilgi İşlem' },
-  { label: 'Fabrika', value: 'Fabrika' },
-  { label: 'Ofis / Muhasebe', value: 'Ofis / Muhasebe' },
-  { label: 'Sunucular', value: 'Sunucular' },
-  { label: 'Yönetim', value: 'Yönetim' },
-  { label: 'Pazarlama / Satış', value: 'Pazarlama / Satış' },
-  { label: 'Depo / Lojistik', value: 'Depo / Lojistik' },
-  { label: 'Genel', value: 'Genel' }
-];
+const departmentOptions = computed(() => {
+  const currentComp = (props.treeData || []).find(c => c.name === formModel.company);
+  const compDepts = currentComp ? currentComp.departments : [];
+  const defaults = ['Bilgi İşlem', 'Muhasebe', 'Kalite', 'Fabrika', 'Üretim', 'Sevkiyat', 'Sunucular', 'Yönetim', 'Genel'];
+  const merged = Array.from(new Set([...compDepts, ...defaults]));
+  return merged.map(d => ({ label: `📁 ${d}`, value: d }));
+});
 
 watch(
   () => props.deviceData,
@@ -95,7 +93,7 @@ function handleClose() {
         />
       </NFormItem>
 
-      <NFormItem label="Departman / Grup">
+      <NFormItem label="Departman / Birim">
         <NSelect
           v-model:value="formModel.department"
           :options="departmentOptions"
